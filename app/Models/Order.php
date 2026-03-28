@@ -54,6 +54,10 @@ class Order extends Model
     {
         $localCity = City::where('is_local', true)->first();
 
+        if (!$localCity) {
+            return route('settings.index');
+        }
+
         return $query->whereHas('menafest', function ($q) use ($localCity) {
             $q->where('from_city_id', '!=', $localCity->id);
         });

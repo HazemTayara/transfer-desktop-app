@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use Illuminate\Http\Request;
+use App\Models\City;
 
 class ManageOrderController extends Controller
 {
@@ -12,17 +13,24 @@ class ManageOrderController extends Controller
      */
     public function index(Request $request)
     {
+        $localCity = City::where('is_local', true)->first();
+
+        if (!$localCity) {
+            return redirect()->route('settings.index')
+                ->with('error', 'الرجاء تحديد المدينة المحلية أولاً من صفحة الإعدادات');
+        }
+
         // getting incomming orders only
         $query = Order::with(['menafest.fromCity', 'menafest.toCity', 'driver'])
             ->incoming();
 
         // ─── Text search filters ───
         if ($request->filled('order_number')) {
-            $query->where('order_number', 'like', '%'.$request->order_number.'%');
+            $query->where('order_number', 'like', '%' . $request->order_number . '%');
         }
 
         if ($request->filled('content')) {
-            $query->where('content', 'like', '%'.$request->input('content').'%');
+            $query->where('content', 'like', '%' . $request->input('content') . '%');
         }
 
         if ($request->filled('count')) {
@@ -30,27 +38,27 @@ class ManageOrderController extends Controller
         }
 
         if ($request->filled('sender')) {
-            $query->where('sender', 'like', '%'.$request->sender.'%');
+            $query->where('sender', 'like', '%' . $request->sender . '%');
         }
 
         if ($request->filled('recipient')) {
-            $query->where('recipient', 'like', '%'.$request->recipient.'%');
+            $query->where('recipient', 'like', '%' . $request->recipient . '%');
         }
 
         if ($request->filled('menafest_code')) {
             $query->whereHas('menafest', function ($q) use ($request) {
-                $q->where('manafest_code', 'like', '%'.$request->menafest_code.'%');
+                $q->where('manafest_code', 'like', '%' . $request->menafest_code . '%');
             });
         }
 
         if ($request->filled('driver_name')) {
             $query->whereHas('driver', function ($q) use ($request) {
-                $q->where('name', 'like', '%'.$request->driver_name.'%');
+                $q->where('name', 'like', '%' . $request->driver_name . '%');
             });
         }
 
         if ($request->filled('notes')) {
-            $query->where('notes', 'like', '%'.$request->notes.'%');
+            $query->where('notes', 'like', '%' . $request->notes . '%');
         }
 
         // ─── Dropdown filters ───
@@ -130,7 +138,7 @@ class ManageOrderController extends Controller
      */
     public function togglePaid(Order $order)
     {
-        $order->is_paid = ! $order->is_paid;
+        $order->is_paid = !$order->is_paid;
         $order->paid_at = $order->is_paid ? now() : null;
         $order->save();
 
@@ -146,7 +154,7 @@ class ManageOrderController extends Controller
      */
     public function toggleExist(Order $order)
     {
-        $order->is_exist = ! $order->is_exist;
+        $order->is_exist = !$order->is_exist;
         $order->save();
 
         return response()->json([
